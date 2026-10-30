@@ -24,35 +24,85 @@ export function TwinChat() {
   const [messages, setMessages] = useState<Msg[]>([GREETING]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  // The finished reply (or error), announced once to screen readers instead of every streamed chunk.
+  const [announcement, setAnnouncement] = useState("");
+  const [fullScreen, setFullScreen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const fabRef = useRef<HTMLButtonElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // A ref, not state, so two submits in the same tick can't both get through.
+  const busyRef = useRef(false);
+  // Follow new text only while the visitor is at (or near) the bottom of the list.
+  const stickRef = useRef(true);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const wasOpenRef = useRef(false);
+
+  const openChat = useCallback(() => {
+    returnFocusRef.current = document.activeElement as HTMLElement | null;
+    setOpen(true);
+  }, []);
 
   useEffect(() => {
-    const onOpen = () => setOpen(true);
-    window.addEventListener(OPEN_TWIN_EVENT, onOpen);
-    return () => window.removeEventListener(OPEN_TWIN_EVENT, onOpen);
+    window.addEventListener(OPEN_TWIN_EVENT, openChat);
+    return () => window.removeEventListener(OPEN_TWIN_EVENT, openChat);
+  }, [openChat]);
+
+  // Below 560px the panel covers the screen, so it behaves as a modal there.
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 560px)");
+    const update = () => setFullScreen(mq.matches);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
   useEffect(() => {
     if (!open) return;
     const t = setTimeout(() => inputRef.current?.focus(), 250);
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") return setOpen(false);
+      if (e.key !== "Tab" || !fullScreen) return;
+      const focusable = panelRef.current?.querySelectorAll<HTMLElement>("button:not(:disabled), textarea, a[href]");
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     window.addEventListener("keydown", onKey);
     return () => {
       clearTimeout(t);
       window.removeEventListener("keydown", onKey);
     };
+  }, [open, fullScreen]);
+
+  // On close, hand focus back to whatever opened the chat, so keyboard users keep their place.
+  useEffect(() => {
+    if (wasOpenRef.current && !open) {
+      const back = returnFocusRef.current;
+      (back?.isConnected && back !== document.body ? back : fabRef.current)?.focus();
+    }
+    wasOpenRef.current = open;
   }, [open]);
 
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+    const list = listRef.current;
+    if (list && stickRef.current) list.scrollTop = list.scrollHeight;
   }, [messages]);
 
   const send = useCallback(
     async (text: string) => {
       const question = text.trim();
-      if (!question || busy) return;
+      if (!question || busyRef.current) return;
+      busyRef.current = true;
+      stickRef.current = true;
 
       const history = [...messages.filter((m) => m !== GREETING && !m.error), { role: "user" as const, content: question }];
       setMessages((m) => [...m, { role: "user", content: question }, { role: "assistant", content: "" }]);
@@ -61,8 +111,9 @@ export function TwinChat() {
 
       const ctrl = new AbortController();
       abortRef.current = ctrl;
-      const patchLast = (fn: (m: Msg) => Msg) =>
-        setMessages((all) => [...all.slice(0, -1), fn(all[all.length - 1])]);
+      const patchLast = (fn: (m: Msg) => Msg) => {
+        if (!ctrl.signal.aborted) setMessages((all) => [...all.slice(0, -1), fn(all[all.length - 1])]);
+      };
 
       try {
         const res = await fetch("/api/chat", {
@@ -79,33 +130,40 @@ export function TwinChat() {
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
-        let received = false;
+        let reply = "";
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           const chunk = decoder.decode(value, { stream: true });
-          if (chunk) received = true;
+          reply += chunk;
           patchLast((m) => ({ ...m, content: m.content + chunk }));
         }
-        if (!received) throw new Error("I drew a blank there — mind asking again?");
+        if (!reply) throw new Error("I drew a blank there — mind asking again?");
+        setAnnouncement(reply);
       } catch (err) {
         if (ctrl.signal.aborted) return;
-        patchLast(() => ({
-          role: "assistant",
-          content: err instanceof Error ? err.message : "Something went wrong.",
-          error: true,
-        }));
+        const message = err instanceof Error ? err.message : "Something went wrong.";
+        patchLast(() => ({ role: "assistant", content: message, error: true }));
+        setAnnouncement(message);
       } finally {
-        setBusy(false);
-        abortRef.current = null;
+        // After "New chat", a newer request may own these; leave them alone.
+        if (abortRef.current === ctrl) {
+          busyRef.current = false;
+          setBusy(false);
+          abortRef.current = null;
+        }
       }
     },
-    [busy, messages]
+    [messages]
   );
 
   const reset = () => {
     abortRef.current?.abort();
+    abortRef.current = null;
+    busyRef.current = false;
+    stickRef.current = true;
     setBusy(false);
+    setAnnouncement("");
     setMessages([GREETING]);
   };
 
@@ -114,9 +172,10 @@ export function TwinChat() {
   return (
     <>
       <button
+        ref={fabRef}
         type="button"
         className={`twin-fab ${open ? "is-hidden" : ""}`}
-        onClick={() => setOpen(true)}
+        onClick={openChat}
         aria-label="Chat with Alwin's digital twin"
       >
         <span className="twin-avatar" aria-hidden>
@@ -129,9 +188,10 @@ export function TwinChat() {
       </button>
 
       <section
+        ref={panelRef}
         className={`twin ${open ? "is-open" : ""}`}
         role="dialog"
-        aria-modal="false"
+        aria-modal={fullScreen}
         aria-label="Digital twin chat"
         aria-hidden={!open}
         inert={!open}
@@ -156,7 +216,14 @@ export function TwinChat() {
           </button>
         </header>
 
-        <div className="twin__list" ref={listRef} aria-live="polite">
+        <div
+          className="twin__list"
+          ref={listRef}
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            stickRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+          }}
+        >
           {messages.map((m, i) => (
             <div key={i} className={`bubble bubble--${m.role} ${m.error ? "bubble--error" : ""}`}>
               {m.content ? (
@@ -170,6 +237,10 @@ export function TwinChat() {
               )}
             </div>
           ))}
+
+          <p className="sr-only" aria-live="polite">
+            {announcement}
+          </p>
 
           {showSuggestions && (
             <div className="twin__suggest">
@@ -253,23 +324,37 @@ function RichText({ text }: { text: string }) {
   return <>{blocks}</>;
 }
 
+/* Sentence punctuation after a link ("email me at a@b.com.") belongs to the sentence, not the link. */
+function splitTrailing(part: string) {
+  const m = part.match(/^(.*?)([.,;:!?]+)$/);
+  return m ? [m[1], m[2]] : [part, ""];
+}
+
 function inline(s: string): ReactNode[] {
   const re = /(\*\*[^*]+\*\*|https?:\/\/[^\s)]+|[\w.+-]+@[\w-]+\.[\w.]+)/g;
   return s.split(re).map((part, i) => {
     if (!part) return null;
     if (part.startsWith("**") && part.endsWith("**")) return <strong key={i}>{part.slice(2, -2)}</strong>;
-    if (/^https?:\/\//.test(part))
+    if (/^https?:\/\//.test(part)) {
+      const [url, trail] = splitTrailing(part);
       return (
-        <a key={i} href={part} target="_blank" rel="noreferrer">
-          {part.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
-        </a>
+        <Fragment key={i}>
+          <a href={url} target="_blank" rel="noreferrer">
+            {url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+          </a>
+          {trail}
+        </Fragment>
       );
-    if (/^[\w.+-]+@[\w-]+\.[\w.]+$/.test(part))
+    }
+    if (/^[\w.+-]+@[\w-]+\.[\w.]+$/.test(part)) {
+      const [email, trail] = splitTrailing(part);
       return (
-        <a key={i} href={`mailto:${part}`}>
-          {part}
-        </a>
+        <Fragment key={i}>
+          <a href={`mailto:${email}`}>{email}</a>
+          {trail}
+        </Fragment>
       );
+    }
     return <Fragment key={i}>{part.replace(/\*(\S[^*]*)\*/g, "$1")}</Fragment>;
   });
 }

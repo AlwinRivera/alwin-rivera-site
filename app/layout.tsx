@@ -29,7 +29,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${serif.variable} ${mono.variable}`}>
+    // suppressHydrationWarning: the inline script adds the "js" class before React hydrates.
+    <html lang="en" className={`${sans.variable} ${serif.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Runs before first paint, so scroll-reveal hiding only applies when JS is available. */}
+        <script dangerouslySetInnerHTML={{ __html: `document.documentElement.classList.add("js")` }} />
+      </head>
       <body>{children}</body>
     </html>
   );
