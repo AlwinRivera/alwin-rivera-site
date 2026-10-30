@@ -77,8 +77,8 @@ function Hero() {
       <div className="hero__grid">
         <div>
           <p className="hero__lede">
-            I&apos;m <strong>Alwin Rivera</strong> — a front-end developer with {yearsExperience}+ years turning complex designs into
-            fast, accessible, pixel-perfect interfaces that convert.
+            I&apos;m <strong>Alwin Rivera</strong> — a front-end developer with {yearsExperience}+ years turning complex
+            designs into fast, accessible, pixel-perfect interfaces that convert.
           </p>
 
           <div className="hero__ctas">
@@ -121,16 +121,13 @@ function CodeCard() {
           <span className="c">{"// the bar every release clears"}</span>
           {"\n"}
           <span className="k">export const</span> <span className="v">alwin</span> = {"{"}
-          {"\n  "}role: <span className="s">&quot;Front-End Developer&quot;</span>,
-          {"\n  "}since: <span className="n">{careerStartYear}</span>,
-          {"\n  "}approach: <span className="s">&quot;mobile-first&quot;</span>,
-          {"\n  "}a11y: <span className="s">&quot;WCAG AA&quot;</span>,
-          {"\n  "}vitals: {"{ "}lcp: <span className="s">&quot;&lt;2.5s&quot;</span>, cls:{" "}
-          <span className="s">&quot;&lt;0.1&quot;</span>
-          {" }"},
-          {"\n  "}browsers: <span className="s">&quot;every modern one&quot;</span>,
-          {"\n  "}pixels: <span className="k">&quot;perfect&quot;</span>,
-          {"\n"}
+          {"\n  "}role: <span className="s">&quot;Front-End Developer&quot;</span>,{"\n  "}since:{" "}
+          <span className="n">{careerStartYear}</span>,{"\n  "}approach:{" "}
+          <span className="s">&quot;mobile-first&quot;</span>,{"\n  "}a11y:{" "}
+          <span className="s">&quot;WCAG AA&quot;</span>,{"\n  "}vitals: {"{ "}lcp:{" "}
+          <span className="s">&quot;&lt;2.5s&quot;</span>, cls: <span className="s">&quot;&lt;0.1&quot;</span>
+          {" }"},{"\n  "}browsers: <span className="s">&quot;every modern one&quot;</span>,{"\n  "}pixels:{" "}
+          <span className="k">&quot;perfect&quot;</span>,{"\n"}
           {"}"}
           <span className="caret" aria-hidden />
         </code>
@@ -173,7 +170,17 @@ function Marquee() {
 
 /* ───────────────────────── Section header ───────────────────────── */
 
-function SectionHead({ n, label, title, children }: { n: string; label: string; title: React.ReactNode; children?: React.ReactNode }) {
+function SectionHead({
+  n,
+  label,
+  title,
+  children,
+}: {
+  n: string;
+  label: string;
+  title: React.ReactNode;
+  children?: React.ReactNode;
+}) {
   return (
     <Reveal className="shead">
       <div className="shead__label mono">
@@ -416,7 +423,9 @@ function Footer() {
           {profile.lastName}
         </div>
         <div className="footer__row mono">
-          <span>© <CurrentYear fallback={new Date().getFullYear()} /> Alwin Rivera · Built with Next.js</span>
+          <span>
+            © <CurrentYear fallback={new Date().getFullYear()} /> Alwin Rivera · Built with Next.js
+          </span>
           <nav className="footer__links" aria-label="Social">
             <a href={profile.links.linkedin} target="_blank" rel="noreferrer">
               LinkedIn

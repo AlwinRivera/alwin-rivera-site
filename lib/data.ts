@@ -20,7 +20,21 @@ export const profile = {
 const careerStart = new Date("2019-01-01");
 export const careerStartYear = careerStart.getFullYear();
 export const yearsExperience = Math.floor((Date.now() - careerStart.getTime()) / (365.25 * 86_400_000));
-const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+const NUMBER_WORDS = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+];
 export const yearsInWords = NUMBER_WORDS[yearsExperience] ?? String(yearsExperience);
 // e.g. "UTC+8", from the time zone rather than hard-coded.
 export const utcOffset =
@@ -56,8 +70,16 @@ export const pillars = [
 
 export const principles = [
   { id: "01", title: "Mobile-first", body: "Every layout starts at the smallest screen and scales up with intent." },
-  { id: "02", title: "Accessible by default", body: "Semantic markup, keyboard paths and contrast are requirements, not extras." },
-  { id: "03", title: "Performance-obsessed", body: "Lean payloads, fast paint, zero jank. Speed is a feature users feel." },
+  {
+    id: "02",
+    title: "Accessible by default",
+    body: "Semantic markup, keyboard paths and contrast are requirements, not extras.",
+  },
+  {
+    id: "03",
+    title: "Performance-obsessed",
+    body: "Lean payloads, fast paint, zero jank. Speed is a feature users feel.",
+  },
   { id: "04", title: "Pixel-perfect", body: "Designs ship the way they were drawn — across every modern browser." },
 ];
 

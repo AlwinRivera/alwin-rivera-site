@@ -27,6 +27,11 @@ Use a regular OpenRouter API key, not a management key.
 | `npm run dev` | Development server on http://localhost:3000 |
 | `npm run build` | Production build |
 | `npm start` | Serve the production build on port 3000 |
+| `npm run lint` | ESLint, with Next.js and full jsx-a11y accessibility rules |
+| `npm run format` / `format:check` | Prettier: rewrite, or just check, formatting |
+| `npm test` | Vitest unit tests in `tests/` (chat rendering and the chat API; no network calls) |
+
+`npx tsc` runs TypeScript 7. ESLint's TypeScript support can't load TypeScript 7 yet, so `package.json` follows Microsoft's side-by-side setup: the `typescript` package is the TypeScript 6 compatibility build, and TypeScript 7 is installed as `@typescript/native`.
 
 ## Where things live
 

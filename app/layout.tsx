@@ -15,8 +15,7 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", displ
 
 export const metadata: Metadata = {
   title: "Alwin Rivera — Front-End Developer",
-  description:
-    `Alwin Rivera is a Cebu-based front-end developer with ${yearsExperience}+ years building accessible, high-performance websites, reusable UI components and high-converting landing pages.`,
+  description: `Alwin Rivera is a Cebu-based front-end developer with ${yearsExperience}+ years building accessible, high-performance websites, reusable UI components and high-converting landing pages.`,
   openGraph: {
     title: "Alwin Rivera — Front-End Developer",
     description: "Enterprise-grade front-end engineering, with an edge.",

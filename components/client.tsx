@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode, type CSSProperties } from "react";
 
 /* Fades + lifts children into view once, when scrolled to. */
 export function Reveal({
@@ -122,6 +122,8 @@ export function Nav() {
   }, [open]);
 
   return (
+    // Keyboard users close the menu with Escape or the toggle; the scrim click is a pointer convenience.
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
     <header
       ref={headerRef}
       className={`nav ${scrolled ? "nav--scrolled" : ""} ${open ? "nav--open" : ""}`}
@@ -214,9 +216,14 @@ export function LocalClock({ timeZone }: { timeZone: string }) {
 }
 
 /* The page is prerendered, so the build-time year is only a fallback until the browser supplies today's. */
+const noSubscribe = () => () => {};
+
 export function CurrentYear({ fallback }: { fallback: number }) {
-  const [year, setYear] = useState(fallback);
-  useEffect(() => setYear(new Date().getFullYear()), []);
+  const year = useSyncExternalStore(
+    noSubscribe,
+    () => new Date().getFullYear(),
+    () => fallback
+  );
   return <>{year}</>;
 }
 
