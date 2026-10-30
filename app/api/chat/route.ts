@@ -1,4 +1,5 @@
 import { buildTwinPrompt } from "@/lib/twin";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // Picked by testing the free OpenRouter models against the twin prompt: fastest, and stays grounded.
 // Later entries are tried in order only when earlier ones are rate-limited or down (OpenRouter fallback routing).
@@ -18,38 +19,18 @@ const MAX_CHARS = 1200;
 const MAX_BODY_BYTES = 32_000;
 const RETRY_DELAYS_MS = [1500, 3500];
 const UPSTREAM_TIMEOUT_MS = 25_000;
-const RATE_LIMIT = { perIp: 10, windowMs: 60_000, dailyTotal: 300 };
 const INTERRUPTED = "\n\n⚠️ Connection interrupted — please try again.";
 
 export const maxDuration = 30;
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-/* In-memory limits: fine for a single server process. On serverless hosts memory isn't shared
-   between instances, so swap this for a shared store (e.g. Upstash Redis) when deploying there. */
-const hits = new Map<string, { n: number; reset: number }>();
-const daily = { n: 0, reset: 0 };
-
-function allow(ip: string) {
-  const now = Date.now();
-  if (now > daily.reset) Object.assign(daily, { n: 0, reset: now + 86_400_000 });
-  if (daily.n >= RATE_LIMIT.dailyTotal) return "daily";
-
-  for (const [k, e] of hits) if (now > e.reset) hits.delete(k);
-  const e = hits.get(ip);
-  if (!e) hits.set(ip, { n: 1, reset: now + RATE_LIMIT.windowMs });
-  else if (++e.n > RATE_LIMIT.perIp) return "ip";
-
-  daily.n++;
-  return null;
-}
-
 export async function POST(req: Request) {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) return Response.json({ error: "The chat isn't configured yet." }, { status: 500 });
 
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || req.headers.get("x-real-ip") || "local";
-  const limited = allow(ip);
+  const limited = await checkRateLimit(ip);
   if (limited === "daily")
     return Response.json(
       { error: "I've answered a lot of questions today and I'm taking a break — email me instead!" },
