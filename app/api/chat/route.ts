@@ -1,9 +1,17 @@
 import { buildTwinPrompt } from "@/lib/twin";
 
 // Picked by testing the free OpenRouter models against the twin prompt: fastest, and stays grounded.
-const MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
-// Tried in order only when MODEL is rate-limited or down (OpenRouter fallback routing).
-const FALLBACK_MODELS = ["dots-studio/dots-3-note-preview:free", "google/gemma-4-26b-a4b-it:free"];
+// Later entries are tried in order only when earlier ones are rate-limited or down (OpenRouter fallback routing).
+// Free models get retired, so OPENROUTER_MODELS in .env (comma-separated) can replace this list without a code change.
+const DEFAULT_MODELS = [
+  "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "dots-studio/dots-3-note-preview:free",
+  "google/gemma-4-26b-a4b-it:free",
+];
+const MODELS =
+  process.env.OPENROUTER_MODELS?.split(",")
+    .map((m) => m.trim())
+    .filter(Boolean) ?? DEFAULT_MODELS;
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 const MAX_TURNS = 12;
 const MAX_CHARS = 1200;
@@ -83,7 +91,7 @@ export async function POST(req: Request) {
         "X-Title": "Alwin Rivera - Digital Twin",
       },
       body: JSON.stringify({
-        models: [MODEL, ...FALLBACK_MODELS],
+        models: MODELS.length ? MODELS : DEFAULT_MODELS,
         stream: true,
         temperature: 0.4,
         // Headroom for the hidden reasoning these models do before answering.

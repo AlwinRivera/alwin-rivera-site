@@ -55,6 +55,8 @@ export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("");
+  const headerRef = useRef<HTMLElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -82,22 +84,46 @@ export function Nav() {
     document.body.style.overflow = open ? "hidden" : "";
   }, [open]);
 
-  // The menu is hidden by CSS above the mobile breakpoint, so close it there (and on Escape)
+  // The menu is hidden by CSS above the mobile breakpoint, so close it there
   // rather than leave the page scroll-locked with no visible way out.
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 861px)");
     const onResize = () => mq.matches && setOpen(false);
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("resize", onResize);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("keydown", onKey);
-    };
+    return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  // While the full-screen menu is open: Escape closes it, and Tab stays inside the header.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        toggleRef.current?.focus();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const focusable = [...(headerRef.current?.querySelectorAll<HTMLElement>("a[href], button") ?? [])].filter(
+        (el) => el.tabIndex >= 0 && el.offsetParent !== null
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   return (
     <header
+      ref={headerRef}
       className={`nav ${scrolled ? "nav--scrolled" : ""} ${open ? "nav--open" : ""}`}
       onClick={(e) => {
         // Tapping the scrim (the header's own ::before) closes the menu.
@@ -129,9 +155,12 @@ export function Nav() {
         </a>
 
         <button
+          ref={toggleRef}
+          type="button"
           className="nav__toggle"
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
+          aria-controls="mobile-nav"
           onClick={() => setOpen((o) => !o)}
         >
           <span />
@@ -139,7 +168,7 @@ export function Nav() {
         </button>
       </div>
 
-      <div className="nav__sheet" aria-hidden={!open}>
+      <div id="mobile-nav" className="nav__sheet" aria-hidden={!open}>
         {NAV.map((item, i) => (
           <a
             key={item.href}
@@ -181,7 +210,27 @@ export function LocalClock({ timeZone }: { timeZone: string }) {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [timeZone]);
-  return <span suppressHydrationWarning>{time || "--:--:--"}</span>;
+  return <span>{time || "--:--:--"}</span>;
+}
+
+/* The page is prerendered, so the build-time year is only a fallback until the browser supplies today's. */
+export function CurrentYear({ fallback }: { fallback: number }) {
+  const [year, setYear] = useState(fallback);
+  useEffect(() => setYear(new Date().getFullYear()), []);
+  return <>{year}</>;
+}
+
+/* Pauses every looping animation on the page (WCAG 2.2.2), for visitors who can't hover to pause. */
+export function MotionToggle() {
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-motion-paused", paused);
+  }, [paused]);
+  return (
+    <button type="button" className="motion-toggle mono" aria-pressed={paused} onClick={() => setPaused((p) => !p)}>
+      <span aria-hidden>{paused ? "▶" : "❚❚"}</span> Pause motion
+    </button>
+  );
 }
 
 export function CopyEmail({ email }: { email: string }) {

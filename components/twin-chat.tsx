@@ -27,6 +27,8 @@ export function TwinChat() {
   // The finished reply (or error), announced once to screen readers instead of every streamed chunk.
   const [announcement, setAnnouncement] = useState("");
   const [fullScreen, setFullScreen] = useState(false);
+  // True when a reply hasn't started arriving after a few seconds; free models can be slow.
+  const [slow, setSlow] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const panelRef = useRef<HTMLElement>(null);
@@ -111,6 +113,8 @@ export function TwinChat() {
 
       const ctrl = new AbortController();
       abortRef.current = ctrl;
+      setSlow(false);
+      const slowTimer = setTimeout(() => setSlow(true), 8000);
       const patchLast = (fn: (m: Msg) => Msg) => {
         if (!ctrl.signal.aborted) setMessages((all) => [...all.slice(0, -1), fn(all[all.length - 1])]);
       };
@@ -135,6 +139,7 @@ export function TwinChat() {
           const { done, value } = await reader.read();
           if (done) break;
           const chunk = decoder.decode(value, { stream: true });
+          clearTimeout(slowTimer);
           reply += chunk;
           patchLast((m) => ({ ...m, content: m.content + chunk }));
         }
@@ -146,8 +151,10 @@ export function TwinChat() {
         patchLast(() => ({ role: "assistant", content: message, error: true }));
         setAnnouncement(message);
       } finally {
+        clearTimeout(slowTimer);
         // After "New chat", a newer request may own these; leave them alone.
         if (abortRef.current === ctrl) {
+          setSlow(false);
           busyRef.current = false;
           setBusy(false);
           abortRef.current = null;
@@ -229,11 +236,14 @@ export function TwinChat() {
               {m.content ? (
                 <RichText text={m.content} />
               ) : (
-                <span className="typing" aria-label="Typing">
-                  <i />
-                  <i />
-                  <i />
-                </span>
+                <>
+                  <span className="typing" aria-label="Typing">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  {slow && <span className="typing__hint mono">Still thinking…</span>}
+                </>
               )}
             </div>
           ))}
@@ -297,26 +307,33 @@ export function AskTwinButton({ className = "btn btn--ghost" }: { className?: st
   );
 }
 
-/* Minimal, safe markdown: paragraphs, "-"/"*" bullets, **bold**, links and emails. */
+/* Minimal, safe markdown: paragraphs, "-"/"*" bullets, "1." numbered lists, **bold**, links and emails. */
 function RichText({ text }: { text: string }) {
   const blocks: ReactNode[] = [];
-  let bullets: string[] = [];
+  let items: string[] = [];
+  let ordered = false;
   const flush = () => {
-    if (bullets.length) {
+    if (items.length) {
+      const List = ordered ? "ol" : "ul";
       blocks.push(
-        <ul key={`ul${blocks.length}`}>
-          {bullets.map((b, i) => (
+        <List key={`list${blocks.length}`}>
+          {items.map((b, i) => (
             <li key={i}>{inline(b)}</li>
           ))}
-        </ul>
+        </List>
       );
-      bullets = [];
+      items = [];
     }
   };
   text.split("\n").forEach((raw) => {
     const line = raw.trim();
-    const bullet = line.match(/^(?:[-*•]|\d+\.)\s+(.*)/);
-    if (bullet) return void bullets.push(bullet[1]);
+    const item = line.match(/^(?:([-*•])|\d+\.)\s+(.*)/);
+    if (item) {
+      const isOrdered = !item[1];
+      if (items.length && isOrdered !== ordered) flush();
+      ordered = isOrdered;
+      return void items.push(item[2]);
+    }
     flush();
     if (line) blocks.push(<p key={`p${blocks.length}`}>{inline(line)}</p>);
   });

@@ -6,6 +6,8 @@ export const profile = {
   location: "Cebu, Philippines",
   timezone: "Asia/Manila",
   email: "aimrivera@gmail.com",
+  // Shown in the hero badge and given to the digital twin, so both say the same thing.
+  availability: "Open to select engagements",
   links: {
     linkedin: "https://www.linkedin.com/in/alwin-rivera",
     github: "https://github.com/AlwinRivera",
@@ -14,18 +16,31 @@ export const profile = {
   },
 };
 
+/* Derived facts. The page is prerendered, so these are computed at build time and refresh on each deploy. */
+const careerStart = new Date("2019-01-01");
+export const careerStartYear = careerStart.getFullYear();
+export const yearsExperience = Math.floor((Date.now() - careerStart.getTime()) / (365.25 * 86_400_000));
+const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+export const yearsInWords = NUMBER_WORDS[yearsExperience] ?? String(yearsExperience);
+// e.g. "UTC+8", from the time zone rather than hard-coded.
+export const utcOffset =
+  new Intl.DateTimeFormat("en-US", { timeZone: profile.timezone, timeZoneName: "shortOffset" })
+    .formatToParts(new Date())
+    .find((p) => p.type === "timeZoneName")
+    ?.value.replace("GMT", "UTC") ?? "";
+
 export const stats = [
-  { value: "7+", label: "Years shipping production front-end" },
+  { value: `${yearsExperience}+`, label: "Years shipping production front-end" },
   { value: "4", label: "Organizations, one standard" },
-  { value: "2019", label: "First line of production code" },
-  { value: "UTC+8", label: "Cebu-based, working globally" },
+  { value: String(careerStartYear), label: "First line of production code" },
+  { value: utcOffset, label: "Cebu-based, working globally" },
 ];
 
 export const pillars = [
   {
     kicker: "Who I am",
     title: "A seasoned front-end developer.",
-    body: "Over seven years crafting modern, accessible, high-performance web experiences — from scrappy landing pages to platform-scale marketing systems.",
+    body: `Over ${yearsInWords} years crafting modern, accessible, high-performance web experiences — from scrappy landing pages to platform-scale marketing systems.`,
   },
   {
     kicker: "What I bring",

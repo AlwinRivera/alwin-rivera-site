@@ -125,8 +125,13 @@ p {
   background:
     radial-gradient(closest-side at 30% 50%, rgba(212, 255, 58, 0.16), transparent),
     radial-gradient(closest-side at 72% 45%, rgba(139, 123, 255, 0.14), transparent);
-  filter: blur(40px);
-  animation: drift 18s var(--ease) infinite alternate;
+}
+
+/* The gradients are already soft, so no live blur; and only drift on larger screens to spare low-end phones. */
+@media (min-width: 861px) {
+  .backdrop__glow {
+    animation: drift 18s var(--ease) infinite alternate;
+  }
 }
 
 .backdrop__noise {
@@ -737,6 +742,45 @@ a:hover .arrow--diag {
 
 .marquee:hover .marquee__track {
   animation-play-state: paused;
+}
+
+.marquee-wrap {
+  position: relative;
+}
+
+.motion-toggle {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  background: var(--bg-2);
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.motion-toggle:hover,
+.motion-toggle[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Set by the "Pause motion" toggle. */
+[data-motion-paused] *,
+[data-motion-paused] *::before,
+[data-motion-paused] *::after {
+  animation-play-state: paused !important;
 }
 
 .marquee__item {
@@ -1919,11 +1963,13 @@ a:hover .arrow--diag {
 
 .bubble p + p,
 .bubble p + ul,
-.bubble ul + p {
+.bubble ul + p,
+.bubble ol + p {
   margin-top: 8px;
 }
 
-.bubble ul {
+.bubble ul,
+.bubble ol {
   margin: 0;
   padding-left: 18px;
 }
@@ -1972,6 +2018,12 @@ a:hover .arrow--diag {
   display: inline-flex;
   gap: 4px;
   padding: 4px 0;
+}
+
+.typing__hint {
+  margin-left: 10px;
+  font-size: 11px;
+  color: var(--muted);
 }
 
 .typing i {

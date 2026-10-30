@@ -8,8 +8,12 @@ import {
   education,
   projects,
   profiles,
+  careerStartYear,
+  yearsExperience,
+  yearsInWords,
+  utcOffset,
 } from "@/lib/data";
-import { Nav, Reveal, LocalClock, CopyEmail, Spotlight, Arrow } from "@/components/client";
+import { Nav, Reveal, LocalClock, CopyEmail, Spotlight, Arrow, CurrentYear, MotionToggle } from "@/components/client";
 import { TwinChat, AskTwinButton } from "@/components/twin-chat";
 
 export default function Home() {
@@ -47,34 +51,33 @@ function Hero() {
       <div className="hero__meta mono">
         <span className="pill">
           <span className="pulse" aria-hidden />
-          Open to select engagements
+          {profile.availability}
         </span>
         <span className="hero__meta-loc">
-          {profile.location} · <LocalClock timeZone={profile.timezone} /> UTC+8
+          {profile.location} · <LocalClock timeZone={profile.timezone} /> {utcOffset}
         </span>
       </div>
 
       <h1 className="hero__title">
-            <span className="line">
-              <span>Front-end</span>
-            </span>
-            <span className="line">
-              <span>
-                built to <em className="serif">enterprise</em>
-              </span>
-            </span>
-            <span className="line">
-              <span>
-                standards<span className="accent">.</span>{" "}
-                <span className="hero__edge">With an edge.</span>
-              </span>
-            </span>
-          </h1>
+        <span className="line">
+          <span>Front-end</span>
+        </span>
+        <span className="line">
+          <span>
+            built to <em className="serif">enterprise</em>
+          </span>
+        </span>
+        <span className="line">
+          <span>
+            standards<span className="accent">.</span> <span className="hero__edge">With an edge.</span>
+          </span>
+        </span>
+      </h1>
 
       <div className="hero__grid">
         <div>
           <p className="hero__lede">
-            I&apos;m <strong>Alwin Rivera</strong> — a front-end developer with 7+ years turning complex designs into
+            I&apos;m <strong>Alwin Rivera</strong> — a front-end developer with {yearsExperience}+ years turning complex designs into
             fast, accessible, pixel-perfect interfaces that convert.
           </p>
 
@@ -103,7 +106,7 @@ function Hero() {
 
 function CodeCard() {
   return (
-    <div className="code" aria-label="Build specification">
+    <div className="code" role="figure" aria-label="Build specification">
       <div className="code__bar">
         <span className="code__dots" aria-hidden>
           <i />
@@ -119,7 +122,7 @@ function CodeCard() {
           {"\n"}
           <span className="k">export const</span> <span className="v">alwin</span> = {"{"}
           {"\n  "}role: <span className="s">&quot;Front-End Developer&quot;</span>,
-          {"\n  "}since: <span className="n">2019</span>,
+          {"\n  "}since: <span className="n">{careerStartYear}</span>,
           {"\n  "}approach: <span className="s">&quot;mobile-first&quot;</span>,
           {"\n  "}a11y: <span className="s">&quot;WCAG AA&quot;</span>,
           {"\n  "}vitals: {"{ "}lcp: <span className="s">&quot;&lt;2.5s&quot;</span>, cls:{" "}
@@ -152,15 +155,18 @@ function CodeCard() {
 function Marquee() {
   const row = [...skills, ...skills];
   return (
-    <div className="marquee" aria-label="Core skills">
-      <div className="marquee__track">
-        {row.map((s, i) => (
-          <span key={i} className="marquee__item" aria-hidden={i >= skills.length}>
-            {s}
-            <span className="marquee__sep">✦</span>
-          </span>
-        ))}
+    <div className="marquee-wrap">
+      <div className="marquee" role="marquee" aria-label="Core skills">
+        <div className="marquee__track">
+          {row.map((s, i) => (
+            <span key={i} className="marquee__item" aria-hidden={i >= skills.length}>
+              {s}
+              <span className="marquee__sep">✦</span>
+            </span>
+          ))}
+        </div>
       </div>
+      <MotionToggle />
     </div>
   );
 }
@@ -231,7 +237,7 @@ function Journey() {
         label="Career journey"
         title={
           <>
-            Seven years. <em className="serif">One standard.</em>
+            {yearsInWords[0].toUpperCase() + yearsInWords.slice(1)} years. <em className="serif">One standard.</em>
           </>
         }
       >
@@ -410,7 +416,7 @@ function Footer() {
           {profile.lastName}
         </div>
         <div className="footer__row mono">
-          <span>© {new Date().getFullYear()} Alwin Rivera · Built with Next.js</span>
+          <span>© <CurrentYear fallback={new Date().getFullYear()} /> Alwin Rivera · Built with Next.js</span>
           <nav className="footer__links" aria-label="Social">
             <a href={profile.links.linkedin} target="_blank" rel="noreferrer">
               LinkedIn

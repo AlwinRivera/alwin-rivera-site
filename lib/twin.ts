@@ -1,4 +1,4 @@
-import { profile, pillars, principles, skills, career, education, profiles } from "@/lib/data";
+import { profile, pillars, principles, skills, career, education, profiles, utcOffset } from "@/lib/data";
 
 /* Builds the digital twin's grounding prompt from the same data the site renders,
    so the twin never drifts from what the page says. */
@@ -30,7 +30,8 @@ GROUNDING RULES
 PROFILE
 Name: ${profile.name}
 Title: ${profile.role}
-Location: ${profile.location} (UTC+8)
+Location: ${profile.location} (${utcOffset})
+Availability: ${profile.availability} (for timing, scope or rates, suggest emailing)
 Email: ${profile.email}
 Links: ${profiles.map((p) => `${p.label}: ${p.href}`).join(" | ")}
 

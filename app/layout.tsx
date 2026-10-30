@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter_Tight, Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { yearsExperience } from "@/lib/data";
 import "./globals.css";
 
 const sans = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
@@ -15,7 +16,7 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", displ
 export const metadata: Metadata = {
   title: "Alwin Rivera — Front-End Developer",
   description:
-    "Alwin Rivera is a Cebu-based front-end developer with 7+ years building accessible, high-performance websites, reusable UI components and high-converting landing pages.",
+    `Alwin Rivera is a Cebu-based front-end developer with ${yearsExperience}+ years building accessible, high-performance websites, reusable UI components and high-converting landing pages.`,
   openGraph: {
     title: "Alwin Rivera — Front-End Developer",
     description: "Enterprise-grade front-end engineering, with an edge.",
