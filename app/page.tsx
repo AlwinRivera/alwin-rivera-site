@@ -321,12 +321,12 @@ function Work() {
         label="Selected work"
         title={
           <>
-            Case studies, <em className="serif">loading</em>
+            Work you can <em className="serif">click</em>
             <span className="blink accent">_</span>
           </>
         }
       >
-        A curated portfolio is in production. In the meantime, explore the code, experiments and earlier work below.
+        Client sites, a web app, my own product and a side-project game. In-depth case studies are on the way.
       </SectionHead>
 
       <Spotlight className="projects">
@@ -336,7 +336,9 @@ function Work() {
             <div data-spot className="project__inner">
               <div className="project__top mono">
                 <span>{p.id}</span>
-                <span className={`project__status ${live ? "is-live" : ""}`}>{live ? "Live" : "In production"}</span>
+                <span className={`project__status ${live && !p.statusLabel ? "is-live" : ""}`}>
+                  {p.statusLabel ?? (live ? "Live" : "In production")}
+                </span>
               </div>
               <div className="project__visual" aria-hidden>
                 <span className="project__glyph">{p.id.split("/")[1]}</span>
@@ -345,7 +347,7 @@ function Work() {
               <h3 className="project__title">{p.title}</h3>
               <p className="project__blurb">{p.blurb}</p>
               <span className="project__cta mono">
-                {live ? "View case study" : "Coming soon"} <Arrow diag={!!live} />
+                {live ? (p.cta ?? "Visit") : "Coming soon"} <Arrow diag={!!live} />
               </span>
             </div>
           );

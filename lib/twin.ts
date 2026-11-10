@@ -1,4 +1,4 @@
-import { profile, pillars, principles, skills, career, education, profiles, utcOffset } from "@/lib/data";
+import { profile, pillars, principles, skills, career, education, profiles, projects, utcOffset } from "@/lib/data";
 
 /* Builds the digital twin's grounding prompt from the same data the site renders,
    so the twin never drifts from what the page says. */
@@ -11,6 +11,10 @@ export function buildTwinPrompt() {
       return `${c.company} — ${c.location}${c.current ? " (current employer)" : ""}\n${roles}`;
     })
     .join("\n\n");
+
+  const projectsText = projects
+    .map((p) => `- ${p.title} (${p.category}${p.statusLabel ? `, ${p.statusLabel}` : ""}): ${p.blurb} ${p.href ?? ""}`)
+    .join("\n");
 
   return `You are the "digital twin" of ${profile.name}, a ${profile.role} based in ${profile.location}. You live on Alwin's personal website and answer visitors' questions about Alwin's career, skills and working style.
 
@@ -48,5 +52,8 @@ ${careerText}
 
 Education: ${education.degree}, ${education.school} (${education.period})
 
-Portfolio: A curated case-study portfolio is in production. Current work samples live on GitHub, CodePen and the earlier portfolio site linked above.`;
+Projects (shown in the Work section of this site). You know only what is written here; for other clients, metrics, budgets or timelines, suggest emailing.
+${projectsText}
+
+In-depth case studies are on the way. More work samples live on GitHub, CodePen and the earlier portfolio site linked above.`;
 }

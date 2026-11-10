@@ -214,30 +214,74 @@ export type Project = {
   blurb: string;
   href?: string;
   status: "live" | "soon";
+  // Shown instead of "Live", e.g. "Pre-launch".
+  statusLabel?: string;
+  // Card call to action, e.g. "Visit site".
+  cta?: string;
 };
 
-// Add real case studies here — set status to "live" and provide an href.
+// Everything here is also given to the digital twin, so keep it factual.
 export const projects: Project[] = [
   {
     id: "P/01",
-    title: "Case study in progress",
-    category: "Landing Page · Conversion",
-    blurb: "A deep dive into a high-converting marketing page — from design handoff to production metrics.",
-    status: "soon",
+    title: "Dinkwave",
+    category: "Web App · Firebase",
+    blurb:
+      "Court booking for a pickleball venue in Oslob, Cebu: guests book courts and look up their bookings, and staff have their own sign-in.",
+    href: "https://dinkwave-oslob.web.app/",
+    status: "live",
+    statusLabel: "Pre-launch",
+    cta: "View app",
   },
   {
     id: "P/02",
-    title: "Component system",
-    category: "UI Library · Design Systems",
-    blurb: "Reusable, accessible components engineered to scale across products and teams.",
-    status: "soon",
+    title: "rvra Forms",
+    category: "Product · Form Backend",
+    blurb:
+      "My hosted form service for static sites: point an HTML form at it and submissions land in your inbox and dashboard, with no server to build.",
+    href: "https://rvra.dev/forms/",
+    status: "live",
+    cta: "Visit product",
   },
   {
     id: "P/03",
-    title: "Performance teardown",
-    category: "Optimization · Core Web Vitals",
-    blurb: "Before-and-after of a real-world performance overhaul, measured in milliseconds.",
-    status: "soon",
+    title: "Jims Enterprises",
+    category: "Client Site · B2B Catalog",
+    blurb:
+      "Catalog site for a Cebu plumbing and building-materials distributor, in HTML, CSS and jQuery. I designed and built the original years ago and redesigned it in 2026.",
+    href: "https://jimsenterprises.net/",
+    status: "live",
+    cta: "Visit site",
+  },
+  {
+    id: "P/04",
+    title: "Lio Chem Trading",
+    category: "Client Site · B2B Supplier",
+    blurb:
+      "Site for an industrial cleaning-chemicals supplier in Mandaue, in HTML, CSS and jQuery. I designed and built the original and redesigned it in 2026.",
+    href: "https://liochemtrading.com/",
+    status: "live",
+    cta: "Visit site",
+  },
+  {
+    id: "P/05",
+    title: "DINK!",
+    category: "Browser Game · HTML5",
+    blurb:
+      "An arcade pickleball game with three modes, twelve challenges and unlockable gear, playable with mouse, touch or keyboard.",
+    href: "https://aimrivera.itch.io/dink",
+    status: "live",
+    statusLabel: "In development",
+    cta: "Play it",
+  },
+  {
+    id: "P/06",
+    title: "RVRA",
+    category: "Studio Site · Brand & Web",
+    blurb: "The site for RVRA, the small web studio I run, designing and building for founders and brands.",
+    href: "https://rvra.dev/",
+    status: "live",
+    cta: "Visit site",
   },
 ];
 
