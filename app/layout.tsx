@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter_Tight, Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { yearsExperience } from "@/lib/data";
 import { siteUrl } from "@/lib/site";
 import "./globals.css";
@@ -41,7 +42,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Runs before first paint, so scroll-reveal hiding only applies when JS is available. */}
         <script dangerouslySetInnerHTML={{ __html: `document.documentElement.classList.add("js")` }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Real-visitor Core Web Vitals, reported to Vercel's Speed Insights dashboard. */}
+        <SpeedInsights />
+      </body>
     </html>
   );
 }
